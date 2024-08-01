@@ -32,8 +32,10 @@ jobs:
     - name: Install dependencies in container
       run: |
         lxc exec ci-container -- apt-get update
-        lxc exec ci-container -- apt-get install -y build-essential nodejs npm
-
+        lxc exec ci-container -- apt-get install -y build-essential curl npm
+        lxc exec ci-container -- /bin/bash -c "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash"
+        lxc exec ci-container -- /bin/bash -c "export NVM_DIR=\"$HOME/.nvm\" && [ -s \"$NVM_DIR/nvm.sh\" ] && \. \"$NVM_DIR/nvm.sh\" && nvm install 18.17.1"
+        lxc exec ci-container -- /bin/bash -c "export NVM_DIR=\"$HOME/.nvm\" && [ -s \"$NVM_DIR/nvm.sh\" ] && \. \"$NVM_DIR/nvm.sh\" && nvm use 18.17.1"
     - name: Copy source code to container
       run: |
         lxc exec ci-container -- mkdir -p /root/project
