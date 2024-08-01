@@ -32,10 +32,16 @@ jobs:
     - name: Install dependencies in container
       run: |
         lxc exec ci-container -- apt-get update
-        lxc exec ci-container -- apt-get upgrade
         lxc exec ci-container -- apt-get install -y build-essential curl npm
-        lxc exec ci-container -- curl -sL https://deb.nodesource.com/setup_18.x | bash -
-        lxc exec ci-container -- apt install nodejs npm
+
+    - name: Install nvm in container
+      run: |
+        lxc exec ci-container -- /bin/bash -c "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.2/install.sh | bash"
+        lxc exec ci-container -- /bin/bash -c "export NVM_DIR=\"\$HOME/.nvm\" && \
+          [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\" && \
+          nvm install 18.17.1 && \
+          nvm use 18.17.1 && \
+          nvm alias default 18.17.1"
         
     - name: Copy source code to container
       run: |
@@ -44,10 +50,14 @@ jobs:
 
     - name: Build and test inside container
       run: |
-        lxc exec ci-container -- /bin/bash -c "ls /root/project"
-        lxc exec ci-container -- /bin/bash -c "cd /root/project && npm install"
-        lxc exec ci-container -- /bin/bash -c "cd /root/project && npm run build"
+        lxc exec ci-container -- /bin/bash -c "export NVM_DIR=\"\$HOME/.nvm\" && \
+          [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\" && \
+          cd /root/project && npm install"
+        lxc exec ci-container -- /bin/bash -c "export NVM_DIR=\"\$HOME/.nvm\" && \
+          [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\" && \
+          cd /root/project && npm run build"
 
     #- name: Clean up container
     #  if: always()
     #  run: lxc delete -f ci-container
+
