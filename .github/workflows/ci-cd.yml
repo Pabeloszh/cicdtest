@@ -37,7 +37,7 @@ jobs:
     - name: Copy source code to container
       run: |
         lxc exec ci-container -- mkdir -p /root/project
-        lxc file push -r . ci-container/root/project
+        lxc file push -r * ci-container/root/project
 
     - name: Build and test inside container
       run: |
