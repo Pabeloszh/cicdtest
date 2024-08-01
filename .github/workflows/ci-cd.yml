@@ -41,9 +41,10 @@ jobs:
 
     - name: Build and test inside container
       run: |
+        lxc exec ci-container -- /bin/bash -c "ls /root/project"
         lxc exec ci-container -- /bin/bash -c "cd /root/project && npm install"
         lxc exec ci-container -- /bin/bash -c "cd /root/project && npm run build"
 
-    - name: Clean up container
-      if: always()
-      run: lxc delete -f ci-container
+    #- name: Clean up container
+    #  if: always()
+    #  run: lxc delete -f ci-container
