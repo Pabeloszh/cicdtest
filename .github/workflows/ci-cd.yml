@@ -1,48 +1,47 @@
- # This is a basic workflow to help you get started with Actions
+name: CI/CD Pipeline
 
-name: CI/CD Test
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "main" ]
+    branches:
+      - main
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: self-hosted
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Install LXD
-        run: sudo snap install lxd
+    # Assuming LXD is already installed and initialized
+    # If not, uncomment the following steps
+    # - name: Install LXD
+    #   run: sudo apt-get install -y lxd
 
-      - name: Initialize LXD
-        run: sudo lxd init --auto
-      
-      - name: Launch LXD container
-        run: |
-          lxc launch ubuntu:20.04 ci-container
-          lxc exec ci-container -- /bin/bash -c "apt-get update && apt-get install -y build-essential"
-      
-      - name: Copy source code to container
-        run: lxc file push -r . ci-container/root/project
+    # - name: Initialize LXD
+    #   run: sudo lxd init --auto
 
-      - name: Build and test inside container
-        run: |
-          lxc exec ci-container -- /bin/bash -c "cd /root/project && ./build.sh && ./test.sh"
+    - name: Launch LXD container
+      run: |
+        lxc launch images:debian/11/amd64 ci-container
+        sleep 10
 
-      - name: Clean up container
-        if: always()
-        run: lxc delete -f ci-container
+    - name: Install dependencies in container
+      run: |
+        lxc exec ci-container -- apt-get update
+        lxc exec ci-container -- apt-get install -y build-essential nodejs npm
+
+    - name: Copy source code to container
+      run: lxc file push -r . ci-container/root/project
+
+    - name: Build and test inside container
+      run: |
+        lxc exec ci-container -- /bin/bash -c "cd /root/project && npm install"
+        lxc exec ci-container -- /bin/bash -c "cd /root/project && npm run build"
+
+    - name: Clean up container
+      if: always()
+      run: lxc delete -f ci-container
