@@ -108,7 +108,7 @@ jobs:
     - name: Copy source code to container
       run: |
         lxc exec prod-container -- mkdir -p /root/project
-        lxc file push -r * ci-container/root/project
+        lxc file push -r * prod-container/root/project
 
     - name: Build and test inside container
       run: |
