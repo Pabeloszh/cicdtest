@@ -107,17 +107,17 @@ jobs:
         
     - name: Copy source code to container
       run: |
-        lxc exec ci-container -- mkdir -p /root/project
+        lxc exec prod-container -- mkdir -p /root/project
         lxc file push -r * ci-container/root/project
 
     - name: Build and test inside container
       run: |
-        lxc exec ci-container -- /bin/bash -c "export NVM_DIR=\"\$HOME/.nvm\" && \
+        lxc exec prod-container -- /bin/bash -c "export NVM_DIR=\"\$HOME/.nvm\" && \
           [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\" && \
           cd /root/project && npm install"
-        lxc exec ci-container -- /bin/bash -c "export NVM_DIR=\"\$HOME/.nvm\" && \
+        lxc exec prod-container -- /bin/bash -c "export NVM_DIR=\"\$HOME/.nvm\" && \
           [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\" && \
           cd /root/project && npm run build"
-        # lxc exec ci-container -- /bin/bash -c "export NVM_DIR=\"\$HOME/.nvm\" && \
+        # lxc exec prod-container -- /bin/bash -c "export NVM_DIR=\"\$HOME/.nvm\" && \
           # [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\" && \
           # cd /root/project && node .output/server/index.mjs"
