@@ -33,9 +33,9 @@ jobs:
       - name: Install dependencies
         run: |
           cd /var/www/app
-          sudo npm install
+          npm install
 
       - name: Build application
         run: |
           cd /var/www/app
-          sudo npm run build
+          npm run build
