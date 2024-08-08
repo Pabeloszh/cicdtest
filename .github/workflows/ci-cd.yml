@@ -33,8 +33,6 @@ jobs:
       - name: Install dependencies
         run: |
           cd /var/www/app
-          whoami
-          sudo -i -u vagrant
           npm install
 
       - name: Build application
