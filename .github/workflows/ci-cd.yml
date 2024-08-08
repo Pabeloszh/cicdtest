@@ -41,6 +41,5 @@ jobs:
           npm run build
       - name: Start application
         run:  |
-          sudo npm install -g pm2
           pm2 start /var/www/app/.output/server/index.mjs --name nuxt-app
           pm2 save
