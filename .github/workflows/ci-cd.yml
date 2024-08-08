@@ -9,115 +9,28 @@ on:
       - main
 
 jobs:
-  build_and_test:
-    runs-on: self-hosted
-
+  test:
+    runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    # Assuming LXD is already installed and initialized
-    # If not, uncomment the following steps
-    # - name: Install LXD
-    #   run: sudo apt-get install -y lxd
-
-    # - name: Initialize LXD
-    #   run: sudo lxd init --auto
-
-    - name: Launch LXD container
-      run: |
-        lxc launch images:debian/11/amd64 ci-container
-        sleep 10
-
-    - name: Install dependencies in container
-      run: |
-        lxc exec ci-container -- apt-get update
-        lxc exec ci-container -- apt-get install -y build-essential curl npm
-
-    - name: Install nvm in container
-      run: |
-        lxc exec ci-container -- /bin/bash -c "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.2/install.sh | bash"
-        lxc exec ci-container -- /bin/bash -c "export NVM_DIR=\"\$HOME/.nvm\" && \
-          [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\" && \
-          nvm install 18.17.1 && \
-          nvm use 18.17.1 && \
-          nvm alias default 18.17.1"
-        
-    - name: Copy source code to container
-      run: |
-        lxc exec ci-container -- mkdir -p /root/project
-        lxc file push -r * ci-container/root/project
-
-    - name: Build and test inside container
-      run: |
-        lxc exec ci-container -- /bin/bash -c "export NVM_DIR=\"\$HOME/.nvm\" && \
-          [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\" && \
-          cd /root/project && npm install"
-        lxc exec ci-container -- /bin/bash -c "export NVM_DIR=\"\$HOME/.nvm\" && \
-          [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\" && \
-          cd /root/project && npm run build"
-        # lxc exec ci-container -- /bin/bash -c "export NVM_DIR=\"\$HOME/.nvm\" && \
-          # [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\" && \
-          # cd /root/project && npm run test"
-
-    - name: Clean up container
-      if: always()
-      run: lxc delete -f ci-container
-
+      - uses: actions/checkout@v3
+      - run: corepack enable
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+      - run: npm install
+      - run: npm run build
+      # - run: npm run test
   deploy:
-    needs: build_and_test
+    needs: test
     runs-on: self-hosted
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v3
+      - name: Install dependencies
+        run: |
+          cd /var/www/app
+          npm install
 
-    # Assuming LXD is already installed and initialized
-    # If not, uncomment the following steps
-    # - name: Install LXD
-    #   run: sudo apt-get install -y lxd
-
-    # - name: Initialize LXD
-    #   run: sudo lxd init --auto
-
-    - name: Remove existing production container if exists
-      run: |
-        if lxc info prod-container &> /dev/null; then
-          lxc delete -f prod-container
-        fi
-    
-    - name: Launch LXD container
-      run: |
-        lxc launch images:debian/11/amd64 prod-container
-        sleep 10
-
-    - name: Install dependencies in container
-      run: |
-        lxc exec prod-container -- apt-get update
-        lxc exec prod-container -- apt-get install -y build-essential curl npm
-
-    - name: Install nvm in container
-      run: |
-        lxc exec prod-container -- /bin/bash -c "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.2/install.sh | bash"
-        lxc exec prod-container -- /bin/bash -c "export NVM_DIR=\"\$HOME/.nvm\" && \
-          [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\" && \
-          nvm install 18.17.1 && \
-          nvm use 18.17.1 && \
-          nvm alias default 18.17.1"
-        
-    - name: Copy source code to container
-      run: |
-        lxc exec prod-container -- mkdir -p /root/project
-        lxc file push -r * prod-container/root/project
-
-    - name: Build and test inside container
-      run: |
-        lxc exec prod-container -- /bin/bash -c "export NVM_DIR=\"\$HOME/.nvm\" && \
-          [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\" && \
-          cd /root/project && npm install"
-        lxc exec prod-container -- /bin/bash -c "export NVM_DIR=\"\$HOME/.nvm\" && \
-          [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\" && \
-          cd /root/project && npm run build"
-        # lxc exec prod-container -- /bin/bash -c "export NVM_DIR=\"\$HOME/.nvm\" && \
-          # [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\" && \
-          # cd /root/project && node .output/server/index.mjs"
+      - name: Build application
+        run: |
+          cd /var/www/app
+          npm run build
