@@ -39,3 +39,5 @@ jobs:
         run: |
           cd /var/www/app
           npm run build
+      - name: Start application
+        run:  node .output/server/index.mjs
