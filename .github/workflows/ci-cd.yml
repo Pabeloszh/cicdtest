@@ -40,4 +40,7 @@ jobs:
           cd /var/www/app
           npm run build
       - name: Start application
-        run:  node /var/www/app/.output/server/index.mjs
+        run:  |
+          npm install -g pm2
+          pm2 start /var/www/app/.output/server/index.mjs --name nuxt-app
+          pm2 save
